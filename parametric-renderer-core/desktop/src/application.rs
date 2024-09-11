@@ -125,7 +125,7 @@ impl ApplicationHandler<()> for Application {
 
         let window = Arc::new(
             event_loop
-                .create_window(Window::default_attributes())
+                .create_window(Window::default_attributes().with_title("Math2Model"))
                 .unwrap(),
         );
         self.window = Some(window.clone());

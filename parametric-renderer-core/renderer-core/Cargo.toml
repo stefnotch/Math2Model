@@ -20,6 +20,7 @@ wgpu-profiler = "0.18.0"
 # wgsl-parser = "0.5.0"
 winit = { workspace = true }
 slotmap = "1.0.7"
+siphasher = { workspace = true }
 
 [dev-dependencies]
 criterion = "0.5.1"

@@ -13,16 +13,17 @@ use super::{wgpu_context::WgpuContext, MAX_PATCH_COUNT, PATCH_SIZES};
 use std::collections::HashMap;
 
 use glam::{Mat4, Vec3, Vec4};
+use siphasher::sip128::SipHasher;
 use slotmap::{DefaultKey, SlotMap};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub struct NamedShader {
-    pub label: String,
-    pub shader: String,
+struct HashedValue {
+    pub hash: [u8; 16],
 }
 
 pub struct ShaderArena {
-    shader_keys: HashMap<NamedShader, DefaultKey>,
+    hasher: SipHasher,
+    shader_keys: HashMap<HashedValue, DefaultKey>,
     shaders: SlotMap<DefaultKey, ShaderPipelines>,
 }
 
@@ -36,6 +37,7 @@ pub struct ShaderPipelines {
 impl ShaderArena {
     pub fn new() -> Self {
         Self {
+            hasher: SipHasher::new(),
             shader_keys: HashMap::new(),
             shaders: SlotMap::new(),
         }
@@ -51,10 +53,10 @@ impl ShaderArena {
         context: &WgpuContext,
         evaluate_image_code: &str,
     ) -> DefaultKey {
-        let key = NamedShader {
-            label: label.to_string(),
-            shader: evaluate_image_code.to_owned(),
+        let key = HashedValue {
+            hash: self.hasher.hash(evaluate_image_code.as_bytes()).as_bytes(),
         };
+        // It's possible for two separate pipelines to end up with the same label.
         *self.shader_keys.entry(key).or_insert_with(|| {
             let compute_patches = create_compute_patches_pipeline(
                 Some(label),
